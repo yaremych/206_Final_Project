@@ -1,0 +1,173 @@
+SI 206 W17
+Put your name here: Haley Yaremych
+
+----
+
+Which option for the final project are you choosing -- 1, 2, or 3? — Option 2
+
+IF YOU ARE CHOOSING OPTION 3, answer the following questions:
+
+* Write 1-3 sentences summarizing what the goal of your project is:
+
+
+* What are your two data sources? Provide links to documentation or websites you will be getting data from.
+
+
+* Why are you proposing this project?
+
+
+* What will the output of this project be? What will it look like, and what information will it contain?
+
+
+* What are your concerns about this proposal?
+
+
+-----
+
+THE FOLLOWING QUESTIONS ARE FOR EVERYONE. (Though they may be easier if you are choosing Option 1 or 2, because you can reference the Option 1 or 2 instructions.)
+
+* What will at least one of the classes you're going to define be called?
+
+Movie
+
+
+* What will that class take as input to its constructor?
+
+It will accept a dictionary that holds information about that particular movie. The contents of the dictionary will come from making an API request to OMDb. Keys of the dictionary will probably be: title, director, IMDB_rating, actors_list, languages.
+
+
+* What will 1 instance of this class represent?
+
+1 instance of the class will represent 1 movie.
+
+
+* What are 3 instance variables this class will have? What will they be called, and what information will they hold? Why are they important?
+
+
+1) self.title will be a string that represents the title of the movie.
+This instance variable will be useful for later twitter searches based on movie titles.
+
+2) self.director will be a string representing that movie’s director.
+This instance variable will allow for later twitter searches based on the director’s name.
+
+3) self.IMDB_rating will be a floating point number representing the movie’s IMDB rating.
+This will be useful for later database queries, such as searching for movies only with a high rating, for example.
+
+
+* Explain 2 methods the class will have that are not the class constructor (__init__ method) by answering the following questions for each. 
+ONE METHOD:
+- What will the name of the method be?
+
+get_rating()
+
+
+- What will the method do?
+
+In the API documentation for OMDb, it looks like a movie’s IMDb rating is reported as a string that looks like “7.7/10” or “6.2/10”. get_rating() will convert that string into a floating point number like 7.7 or 6.2. Then, the instance variable IMDB_rating will be a floating point number. 
+
+- Will it take any additional input? 
+
+Input will be the value associated with the “Internet Movie Database” key in the “ratings” section of the of the API return.
+
+
+- Will it return anything? Should it change anything about the instance/an instance variable? 
+
+Output will be a floating point number which will set the instance variable self.IMDB_rating to be that floating point number.
+
+
+- Why is it useful for this class definition, in this program?
+
+If ratings are stored as numbers rather than strings, this will make it easier to perhaps sort movies by rating later on. 
+
+
+
+ANOTHER METHOD:
+- What will the name of the method be?
+
+get_actors()
+
+
+- What will the method do?
+
+In the OMDb documentation it looks like the movie actors are returned as just one continuous string, for example: “Leonardo DiCaprio, Kate Winslet, Billy Zane, Kathy Bates”. This method will take that string as input and split it into a list, with each element in the list representing one actor.
+
+- Will it take any additional input? 
+
+Just the value associated with the “actors” key in the API return.
+
+
+- Will it return anything? Should it change anything about the instance/an instance variable? 
+
+Returns a list of actors, and sets that list to be the self.actors instance variable.
+
+
+- Why is it useful for this class definition, in this program?
+
+One of the later parts of the program involves a Twitter search based on movie actors. Having the actors split up separately will make it easier to implement that search.
+
+
+[If you definitely want to have a third, feel free to answer those questions a third time, because you'll have to do so eventually. when you write documentation!]
+
+
+* What will the tables in your database be?
+
+Tweets
+Users
+Movies
+
+
+* What fields will each database table have? Which field of them is the primary key? You should list the fields for each database table here, e.g.
+
+Tweets:
+- tweet text
+- tweet ID (primary key)
+- user who posted the tweet (connects to the Users table) 
+- movie search the tweet came from (connects to the Movies table)
+- number of favorites
+- number of retweets
+
+Users: 
+- user ID (primary key)
+- user screen name
+- number of favorites the user has ever made
+- maybe more
+
+Movies: 
+- ID (primary key)
+- title
+- director
+- number of languages
+- IMDB rating
+- most famous / highest paid actor in the movie
+- maybe more
+
+
+
+* List, in English, 2 queries you'll want to make from your database. At least one should be a JOIN. You can always change these later, but start with  ideas you're interested in and lessen the work on yourself later on! 
+(e.g. from class examples, maybe "I want to make a query that accesses the numbers of times each user has favorited tweets, and the number of times tweets that user posted have been favorited -- so I'll be joining the Tweets table and the Users table")
+
+- retrieve information (eg: screen name, description) about the User who posted the tweet with the most favorites about a given movie — using a JOIN between the Tweets table and the Users table
+
+- retrieve information (eg: title, actors, etc.) about a few movies with the highest IMDb ratings, or IMDb ratings over a certain threshold, using a WHERE clause in the query
+
+
+* What are at least 2 of the data processing mechanics you're planning to use? 
+
+- I can use a dictionary comprehension to compile information about a given Twitter User from my database
+- I can sort with a key parameter, perhaps to sort movies with high IMDb ratings in descending order of their ratings (i.e.: movie with the highest rating appears first)
+
+
+
+* Why will each of those be useful to you? What data might you use it on? 
+(e.g. "Set comprehension: I think I'm going to be looking for unique names and proper nouns in this big set of text, so I'm going to use a set comprehension"). 
+>>>This is especially important if you are doing Option 3, but it's important for everyone!<<<
+
+- Accumulating Twitter User information into a dictionary sounds like the easiest and most understandable way to organize information with labels (where the label, for example is “username” and the associated information is the twitter username).
+- Sorting with a key parameter is the easiest way to sort pieces of data based on some unique attribute (eg: an IMDb rating). Since I will be defining all classes and databases myself, it makes more sense to specify a key manually than to try to sort my data in a built-in or automatic way. 
+
+
+
+* What will your output look like? Will it be a .txt file? a CSV file? something else? What information will it contain? >>>This is especially important if you are doing Option 3, but it's important for everyone!<<<
+
+
+My output will be a .txt file, containing information about each of the queries I made to my database. The top of the file will list the movies that I used for the project.
