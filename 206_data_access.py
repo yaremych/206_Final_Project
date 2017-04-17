@@ -520,6 +520,19 @@ conn.commit()
 
 ### Write code to load data from movie_objects into the Movies table: 
 
+movie_tuples = []
+
+for m in movie_objects: 
+	tup = (None, m.title, m.director, m.num_langs, m.imdb_rating, m.actors[0])
+	movie_tuples.append(tup)
+
+
+statement = 'INSERT INTO Movies VALUES (?, ?, ?, ?, ?, ?)'
+for t in movie_tuples: 
+	cur.execute(statement, t)
+
+conn.commit()
+
 
 
 ##### PART 3: PROCESSING DATA #####
