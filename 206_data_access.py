@@ -454,8 +454,68 @@ cur.execute(table_spec)
 
 ### Write code to load data from all_tweet_dicts into the Tweets table:
 
+# first we need the tweet data to be in tuple form
+list_of_tuples = []
+unique_ids = []
+
+# dictionary keys: dict_keys(['tweet_text', 'num_faves', 'movie_title', 'tweet_id', 'user_id', 'screen_name', 'num_retweets'])
+
+for td in all_tweet_dicts:
+	# tweet id number 
+	id_num = td['tweet_id']
+	tup = (td['tweet_id'], td['tweet_text'], td['user_id'], td['movie_title'], td['num_faves'], td['num_retweets'])
+
+	# if we have not yet seen this tweet id number in unique_ids, add it to unique_ids and also append the whole tuple
+	if id_num not in unique_ids: 
+		unique_ids.append(id_num)
+		list_of_tuples.append(tup)
+
+# print(len(list_of_tuples))
+
+# print(list_of_tuples)
+# for t in list_of_tuples:
+# 	print(t[0])
+
+# ids = []
+# for t in list_of_tuples:
+# 	if t[0] not in ids: 
+# 		ids.append(t[0])
+
+# print(len(list_of_tuples)) # 44
+# print(len(ids)) # 43
+# # there is one tweet in here twice
+
+statement = 'INSERT INTO Tweets VALUES (?, ?, ?, ?, ?, ?)'
+for t in list_of_tuples: 
+	cur.execute(statement, t)
+
+conn.commit()
+
+
 
 ### Write code to load data from all_user_dicts into the Users table:
+
+# print(all_user_dicts[0].keys()) # ['num_faves', 'num_followers', 'user_id', 'screen_name']
+
+# get into tuple form
+user_tuples =  []
+unique_user_ids = []
+
+for ud in all_user_dicts: 
+
+	user_id = ud['user_id']
+	tup = (ud['user_id'], ud['screen_name'], ud['num_faves'], ud['num_followers'])
+
+	if user_id not in unique_user_ids: 
+		unique_user_ids.append(user_id)
+		user_tuples.append(tup)
+
+statement = 'INSERT INTO Users VALUES (?, ?, ?, ?)'
+for t in user_tuples: 
+	cur.execute(statement, t)
+
+conn.commit()
+
 
 
 ### Write code to load data from movie_objects into the Movies table: 
@@ -558,6 +618,7 @@ class get_twitter_user_tests(unittest.TestCase):
 		cachefile = open("206_final_project_cache.json", "r")
 		cachefile_str = cachefile.read()
 		self.assertTrue("twitter_username_UmichAthletics" in cachefile_str, "Testing that the cache file contains a unique identifier from each query.")
+		cachefile.close()
 
 
 
