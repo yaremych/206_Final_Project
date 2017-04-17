@@ -84,6 +84,7 @@ def get_keyword_tweets(kword):
 		new_dict['tweet_id'] = diction['id']
 		new_dict['tweet_text'] = diction['text']
 		new_dict['user_id'] = diction['user']['id']
+		new_dict['screen_name'] = diction['user']['screen_name']
 		new_dict['movie_title'] = kword
 		new_dict['num_faves'] = diction['favorite_count']
 		new_dict['num_retweets'] = diction['retweet_count']
@@ -173,6 +174,7 @@ def get_twitter_user(username):
 	return_dict['num_faves'] = results['favourites_count']
 	return_dict['num_followers'] = results['followers_count']
 
+
 	return return_dict
 
 
@@ -247,24 +249,154 @@ def get_movie_data(movie):
 	### __str___ for a printed representation. Each new line should display one piece of information about the movie (ex: Title: Titanic)
 	### get_rating should alter the OMDb request data from a string to a floating point number, and set that floating point number equal to self.IMDB_rating
 	### get_actors should alter the OMDb request data from one string to a list of strings, and set that list equal to self.actors
+	### get_num_langs should alter the OMDb request data from a string into an integer, and set that integer equal to self.num_langs
+
+
+
+class Movie():
+
+	def __init__(self, input_dict):
+		self.title = input_dict['title']
+		self.director = input_dict['director']
+		self.imdb_rating = input_dict['imdb_rating']
+		self.actors = input_dict['actors']
+		self.num_langs = input_dict['langs']
+
+	def get_rating(self):
+		str1 = self.imdb_rating
+
+		# use regular expression to pull out just the number
+		rating = re.findall('([0-9]*\.[0-9]*)/', str1)
+		rating_str = rating[0]
+		rating_float = float(rating_str)
+		self.imdb_rating = rating_float
+
+
+	def get_actors(self):
+		str1 = self.actors
+		l1 = str1.split(',')
+		l2 = [x.strip() for x in l1]
+		self.actors = l2
+
+
+
+	def get_num_langs(self):
+		str1 = self.num_langs
+
+		l1 = str1.split(',')
+		self.num_langs = len(l1)
+
+	def __str__(self):
+		return "Movie Title: {} \nDirector: {} \nIMDb Rating: {} \nHighest Paid Actor: {} \nNumber of Languages Produced: {}".format(self.title, self.director, str(self.imdb_rating), self.actors[0], str(self.num_langs))
+
+
+# sample_dict = get_movie_data('la la land')
+# m1 = Movie(sample_dict)
+
+# m1.get_rating()
+# m1.get_actors()
+# m1.get_num_langs()
+# print(m1)
+
+
+# {'imdb_rating': '8.4/10', 'actors': 'Ryan Gosling, Emma Stone, Amiée Conn, Terry Walters', 'director': 'Damien Chazelle', 'langs': 'English', 'title': 'La La Land'}
+
+# {'imdb_rating': '7.6/10', 'actors': 'Mahershala Ali, Shariff Earp, Duan Sanderson, Alex R. Hibbert', 'director': 'Barry Jenkins', 'langs': 'English', 'title': 'Moonlight'}
+
+# str1 = 'English'
+
+# str2 = "English, Swedish"
+
+# l1 = str1.split(',')
+# print(l1)
+
+# l2 = str2.split(',')
+# print(l2)
+
+
+## ^^ get_num_langs works on both types of strings ------ write this into a test case
 
 
 ### Create a list of strings called movie_searches. It should contain the 3+ movie titles for which you'll be requesting/handling data:
 
+movie_searches = ['casablanca', 'pulp fiction', 'la la land']
+
 
 ### Create a list called movie_dicts. Each element of the list should be a dictionary that contains OMDb information about that movie. Use the get_movie_data function to accomplish this: 
+
+movie_dicts = []
+
+for movie in movie_searches:
+	d = get_movie_data(movie)
+	movie_dicts.append(d)
 
 
 ### From movie_dicts, create a list called movie_objects. Each element of movie_objects should be an instance of the Movie class. Use those dictionaries to create the instances! 
 
+movie_objects = []
 
-### Using the get_keyword_tweets function, make an API request to get Twitter data about the star actor from each movie. Each time the get_keyword_function is invoked, it returns a list of dictionaries; concatonate those lists together to create one big list of dictionaries, with each dictionary containing information about one tweet. Save that list as all_tweet_dicts: 
+for d in movie_dicts:
+	m1 = Movie(d)
+	m1.get_rating()
+	m1.get_actors()
+	m1.get_num_langs()
+	movie_objects.append(m1)
+
+# for obj in movie_objects:
+# 	print(type(obj))
+# 	print(obj)
+
+
+
+### Using the get_keyword_tweets function, make an API request to get Twitter data about the title of each movie. Each time the get_keyword_function is invoked, it returns a list of dictionaries; concatonate those lists together to create one big list of dictionaries, with each dictionary containing information about one tweet. Save that list as all_tweet_dicts: 
+
+all_tweet_dicts = []
+
+for movie in movie_objects:
+	resp = get_keyword_tweets(movie.title)
+	for d in resp: 
+		all_tweet_dicts.append(d)
+
+
+#print(all_tweet_dicts)
 
 
 ### Write code to extract every Twitter username in all_tweet_dicts (all users who posted the tweets, and all users mentioned in the tweets). Make sure there are no repeats. Save that list as all_usernames: 
 
+all_usernames = []
+
+# first we can extract all screen names from all_tweet_dicts
+
+for d in all_tweet_dicts:
+	if d['screen_name'] not in all_usernames:
+		all_usernames.append(d['screen_name'])
+
+# then use regular expression to find screen names mentioned in the tweet texts
+
+for d in all_tweet_dicts:
+	string = d['tweet_text']
+
+	usernames = re.findall('@([A-z0-9_]+)', string)
+
+	for name in usernames: 
+		if name not in all_usernames:
+			all_usernames.append(name)
+
+#print(all_usernames)
 
 ### Using the get_twitter_user function, make an API request to get data about each of the usernames in all_usernames. Save all those dictionaries together in a list called all_user_dicts: 
+
+all_user_dicts = []
+
+for name in all_usernames:
+	try:
+		user_dict = get_twitter_user(name)
+		all_user_dicts.append(user_dict)
+	except:
+		pass
+	# to deal with "user not found" errors
+
+#print(all_user_dicts)
 
 
 
@@ -387,7 +519,7 @@ class get_keyword_tweets_tests(unittest.TestCase):
 	def test_caching(self):
 		result = get_keyword_tweets("mountain bikes")
 		dict_1 = result[0]
-		self.assertEqual(sorted(dict_1.keys()), sorted(['tweet_id', 'num_faves', 'user_id', 'num_retweets', 'movie_title', 'tweet_text']), "Testing that the get_keyword_tweets function returns a dictionary with the correct keys.")
+		self.assertEqual(sorted(dict_1.keys()), sorted(['tweet_id', 'num_faves', 'user_id', 'num_retweets', 'movie_title', 'tweet_text', 'screen_name']), "Testing that the get_keyword_tweets function returns a dictionary with the correct keys.")
 
 
 # Function to get and cache Twitter data based on a username
