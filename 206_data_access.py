@@ -358,7 +358,9 @@ for movie in movie_objects:
 		all_tweet_dicts.append(d)
 
 
-#print(all_tweet_dicts)
+# print(all_tweet_dicts[0])
+# print(all_tweet_dicts[0].keys())
+# print(type(all_tweet_dicts[0]['tweet_id']))
 
 
 ### Write code to extract every Twitter username in all_tweet_dicts (all users who posted the tweets, and all users mentioned in the tweets). Make sure there are no repeats. Save that list as all_usernames: 
@@ -423,13 +425,32 @@ for name in all_usernames:
 
 ### A Movies table, with the following rows: 
 	### ID (primary key)
-	### title
+	### title (this should connect to the movie_title column of the Tweets table)
 	### director
 	### number of languages
 	### IMDB rating
 	### highest-paid actor in the movie (first in the self.actors list)
-	### total number of awards & nominations the movie recieved
 
+conn = sqlite3.connect('final_project.db')
+cur = conn.cursor()
+
+statement = 'DROP TABLE IF EXISTS Tweets'
+cur.execute(statement)
+statement = 'DROP TABLE IF EXISTS Users'
+cur.execute(statement)
+statement = 'DROP TABLE IF EXISTS Movies'
+cur.execute(statement)
+
+table_spec = 'CREATE TABLE IF NOT EXISTS Tweets (tweet_id INTEGER PRIMARY KEY, tweet_text TEXT, user_id INTEGER, movie_title TEXT, favorites INTEGER, retweets INTEGER)'
+cur.execute(table_spec)
+
+
+table_spec = 'CREATE TABLE IF NOT EXISTS Users (user_id INTEGER PRIMARY KEY, screen_name TEXT, num_faves INTEGER, num_followers INTEGER, FOREIGN KEY (user_id) REFERENCES Tweets (user_id) ON UPDATE SET NULL)'
+cur.execute(table_spec)
+
+
+table_spec = 'CREATE TABLE IF NOT EXISTS Movies (id INTEGER PRIMARY KEY, title TEXT, director TEXT, languages INTEGER, imdb_rating NUMERIC(1,1), best_actor TEXT,  FOREIGN KEY (title) REFERENCES Tweets (movie_title) ON UPDATE SET NULL)'
+cur.execute(table_spec)
 
 ### Write code to load data from all_tweet_dicts into the Tweets table:
 
