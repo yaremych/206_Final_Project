@@ -627,7 +627,15 @@ print(movies_retweets_sorted)
 	### title
 	### IMDb rating
 
-### Use a list comprehension to create a new list of only movies with IMDb ratings higher than 7. Save this new list as best_movies: 
+query = 'SELECT title, imdb_rating FROM Movies'
+cur.execute(query)
+
+### Use a list comprehension to create a new list of only movie titles with IMDb ratings higher than 7. Save this new list as best_movies: 
+
+all_tups = cur.fetchall()
+
+best_movies = [tup[0] for tup in all_tups if tup[1] > 7]
+#print(best_movies)
 
 
 
