@@ -23,6 +23,7 @@ import twitter_info # necessary keys for making twitter API requests
 import json
 import sqlite3
 import re
+import collections
 
 # Authentication for Twitter searches
 consumer_key = twitter_info.consumer_key
@@ -134,14 +135,7 @@ def get_keyword_tweets(kword):
 # # number of retweets: 
 # print(test['statuses'][0]['retweet_count']) # good
 
-# Keys we want: 
-	### tweet ID (primary key) 
-	### tweet text
-	### user ID of the person who posted the tweet (this should connect to the user ID column of the Users table) 
-	### title of the movie search that this tweet came from (this should connect to the title column of the Movies table)
-	### number of favorites
-	### number of retweets
-
+# Keys we want: tweet ID (primary key), tweet text, user ID of the person who posted the tweet (this should connect to the user ID column of the Users table), title of the movie search that this tweet came from (this should connect to the title column of the Movies table), number of favorites, number of retweets
 
 
 
@@ -182,18 +176,14 @@ def get_twitter_user(username):
 #print(get_twitter_user("UMichFootball"))
 #print(get_twitter_user("haleybaley24"))
 
-# keys we need: 
-	### user ID (primary key -- this connects to the user ID column of the Tweets table)
-	### user screen name
-	### number of favorites the user has ever made
-	### number of friends the user has
+# keys we need: user ID (primary key -- this connects to the user ID column of the Tweets table), user screen name, number of favorites the user has ever made, number of friends the user has
 
 
 ### Define a function to get and cache data from the OMDb API based on a movie title search. Call the function get_movie_data. The function should return a dictionary that contains information about the movie that you'll be loading into the Movies table (example keys: "title", "director", etc.):
 
 def get_movie_data(movie):
 
-	unique_identifier = "movie_.{}".format(movie)
+	unique_identifier = "movie_{}".format(movie)
 
 	if unique_identifier in CACHE_DICTION:
 		print("Using cached data for", movie)
@@ -542,13 +532,28 @@ conn.commit()
 
 ### Write a query to do the following: 
 ### For every user in the Users table who has posted a tweet (ie: is present in the UserID column of the Tweets table) grab the following info: 
-	### user ID
+	### the user's screen name
 	### number of followers the user has
 	### number of times their tweet was favorited
 	### number of times their tweet was retweeted
 
+query = 'SELECT Users.screen_name, Users.num_followers, Tweets.favorites, Tweets.retweets FROM Users INNER JOIN Tweets on Users.user_id = Tweets.user_id'
+cur.execute(query)
 
-### From the collections library, create a named tuple with the data you just grabbed. The field names should be: user_ID, num_followers, num_favs, num_retweets (https://docs.python.org/3.3/library/collections.html#collections.namedtuple). Accumulate the named tuples into a list. Save that list as user_popularity: 
+
+
+### From the collections library, create a named tuple with the data you just grabbed. The field names should be: screen_name, num_followers, num_favs, num_retweets (https://docs.python.org/3.3/library/collections.html#collections.namedtuple). Accumulate the named tuples into a list. Save that list as user_popularity: 
+
+pop_tuples = cur.fetchall()
+user_popularity = []
+PopData = collections.namedtuple('PopData', ['screen_name', 'num_followers', 'num_favs', 'num_retweets'])
+
+for t in pop_tuples:
+	named_tup = PopData(screen_name=t[0], num_followers=t[1], num_favs=t[2], num_retweets=t[3])
+	user_popularity.append(named_tup)
+
+#print(user_popularity)
+#print(user_popularity[0].screen_name) -- each tuple has attributes now!! 
 
 
 
@@ -557,15 +562,62 @@ conn.commit()
 ### For each of the movies that were searched for, write a query to grab and save the following data: 
 	### movie title
 	### movie IMDb rating
-	### number of favorites for each tweet about that movie
+	### number of retweetss for each tweet about that movie
 
-### Write code to find the mean number of favorites that each movie recieved in its tweets: 
 
-### Create a dictionary called movie_feedback. Each movie should be a key in the dictionary, with the associated value being a list. The first element of the list should be the movie's IMDb rating, and the second element of the list should be the average number of favorites that movie recieves in its tweets: 
+query = 'SELECT Movies.title, Movies.imdb_rating, Tweets.retweets FROM Movies INNER JOIN Tweets on Movies.title = Tweets.movie_title'
+cur.execute(query)
+
+movie_tups = cur.fetchall()
+
+
+### Write code to find the mean number of retweets that each movie recieved in its tweets: 
+
+casablanca_tups = [tup for tup in movie_tups if tup[0] == 'Casablanca']
+pulp_tups = [tup for tup in movie_tups if tup[0] == 'Pulp Fiction']
+land_tups = [tup for tup in movie_tups if tup[0] == 'La La Land']
+
+
+casablanca_tot = 0
+for tup in casablanca_tups: 
+	casablanca_tot += tup[2]
+casablanca_mean = casablanca_tot / len(casablanca_tups)
+
+pulp_tot = 0
+for tup in pulp_tups: 
+	pulp_tot += tup[2]
+pulp_mean = pulp_tot / len(pulp_tups)
+
+land_tot = 0
+for tup in land_tups: 
+	land_tot += tup[2]
+land_mean = land_tot / len(land_tups)
+
+#print(casablanca_mean)
+#print(pulp_mean)
+#print(land_mean)
+
+
+### Create a dictionary called movie_feedback. Each movie should be a key in the dictionary, with the associated value being a list. The first element of the list should be the movie's IMDb rating, and the second element of the list should be the average number of retweets that movie recieves in its tweets: 
+
+movie_feedback = {}
+movie_feedback['Casablanca'] = [casablanca_tups[0][1], casablanca_mean]
+movie_feedback['Pulp Fiction'] = [pulp_tups[0][1], pulp_mean]
+movie_feedback['La La Land'] = [land_tups[0][1], land_mean]
+
+
+#print(movie_feedback)
+
 
 ### Sort movie_feedback based on IMDb rating in descending order. Save that list as movies_imdb_sorted:
 
-### Sort movie_feedback based on average favorites in descending order. Save that list as movies_favorites_sorted:  
+movies_imdb_sorted = sorted(movie_feedback.keys(), reverse=True, key=lambda x: movie_feedback[x][0])
+print(movies_imdb_sorted)
+
+### Sort movie_feedback based on average retweets in descending order. Save that list as movies_retweets_sorted:  
+
+movies_retweets_sorted = sorted(movie_feedback.keys(), reverse=True, key=lambda x: movie_feedback[x][1])
+print(movies_retweets_sorted)
 
 
 
@@ -594,14 +646,8 @@ conn.commit()
 
 
 ############# TEST CASES ################	
+print("\n\n*** OUTPUT OF TESTS BELOW THIS LINE ***\n\n")
 
-
-# Put your tests here, with any edits you now need from when you turned them in with your project plan.
-
-# Cache file name: final_project_cache.json
-# List of movie dictionaries: movie_dicts
-
-# Write your test cases here.
 
 # Function to get and cache Twitter data based on a search term
 # function name: get_keyword_tweets
@@ -609,11 +655,11 @@ conn.commit()
 class get_keyword_tweets_tests(unittest.TestCase):
 	def test_return_type(self):
 		result = get_keyword_tweets("deadpool")
-		self.assertEqual(type(result[0]), type({}), "Testing that the get_keyword_tweets function returns a list of dictionaries.")
+		self.assertEqual(type(result[0]['num_faves']), type(2), "Testing that num_faves is an integer.")
 	def test_caching(self):
-		result = get_keyword_tweets("mountain bikes")
+		result = get_keyword_tweets("footloose")
 		dict_1 = result[0]
-		self.assertEqual(sorted(dict_1.keys()), sorted(['tweet_id', 'num_faves', 'user_id', 'num_retweets', 'movie_title', 'tweet_text', 'screen_name']), "Testing that the get_keyword_tweets function returns a dictionary with the correct keys.")
+		self.assertEqual(sorted(dict_1.keys()), sorted(['tweet_id', 'num_faves', 'user_id', 'num_retweets', 'movie_title', 'tweet_text', 'screen_name']), "Testing that the get_keyword_tweets function returns dictionaries with the correct keys.")
 
 
 # Function to get and cache Twitter data based on a username
@@ -642,6 +688,10 @@ class get_movie_data_tests(unittest.TestCase):
 	def test_return_content(self):
 		moviedata = get_movie_data("Titanic")
 		self.assertTrue(len(moviedata.keys()) > 0, "Testing that the API request returns content.")
+
+# when the above test runs, it gives me the following warning: //anaconda/lib/python3.5/json/encoder.py:256: ResourceWarning: unclosed <socket.socket fd=18, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=6, laddr=('192.168.1.146', 50838), raddr=('104.244.42.66', 443)> return _iterencode(o, 0)
+# is this a problem? 
+
 	def test_return_content_2(self):
 		moviedata = get_movie_data("Titanic")
 		self.assertTrue("director" in moviedata.keys(), "Testing that the correct information is retrieved from the API request.")
