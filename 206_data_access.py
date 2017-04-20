@@ -24,6 +24,7 @@ import json
 import sqlite3
 import re
 import collections
+from scipy.stats.stats import pearsonr
 
 # Authentication for Twitter searches
 consumer_key = twitter_info.consumer_key
@@ -556,6 +557,14 @@ for t in pop_tuples:
 #print(user_popularity[0].screen_name) -- each tuple has attributes now!! 
 
 
+### Compute the correlation between number of followers and number of retweets. Are they related? 
+
+followers = [t.num_followers for t in user_popularity]
+retweets = [t.num_retweets for t in user_popularity]
+corr = pearsonr(followers, retweets)
+
+print("\n\nThe correlation between number of followers and number of retweets for the tweets in this dataset is {}, with a p-value of {}\n\n".format(corr[0], corr[1]))
+
 
 ## QUERY 2: MOVIE FEEDBACK ##
 
@@ -598,6 +607,8 @@ land_mean = land_tot / len(land_tups)
 #print(land_mean)
 
 
+
+
 ### Create a dictionary called movie_feedback. Each movie should be a key in the dictionary, with the associated value being a list. The first element of the list should be the movie's IMDb rating, and the second element of the list should be the average number of retweets that movie recieves in its tweets: 
 
 movie_feedback = {}
@@ -612,12 +623,25 @@ movie_feedback['La La Land'] = [land_tups[0][1], land_mean]
 ### Sort movie_feedback based on IMDb rating in descending order. Save that list as movies_imdb_sorted:
 
 movies_imdb_sorted = sorted(movie_feedback.keys(), reverse=True, key=lambda x: movie_feedback[x][0])
-print(movies_imdb_sorted)
+#print(movies_imdb_sorted)
 
 ### Sort movie_feedback based on average retweets in descending order. Save that list as movies_retweets_sorted:  
 
 movies_retweets_sorted = sorted(movie_feedback.keys(), reverse=True, key=lambda x: movie_feedback[x][1])
-print(movies_retweets_sorted)
+#print(movies_retweets_sorted)
+
+
+
+### Compute the correlation between IMDB rating and number of retweets. Are they related? 
+
+ratings = [movie_feedback[k][0] for k in movie_feedback.keys()]
+rtws = [movie_feedback[k][1] for k in movie_feedback.keys()]
+
+corr2 = pearsonr(ratings, rtws)
+
+print("\n\nThe correlation between IMDB rating and average number of retweets for the movies in this dataset is {}, with a p-value of {}\n\n".format(corr2[0], corr2[1]))
+
+
 
 
 
@@ -643,15 +667,39 @@ best_movies = [tup[0] for tup in all_tups if tup[1] > 7]
 
 ### Write the processed data into a file called final_project_processed_data.txt. The top of the file should have a heading that says "Processed Data for {movie 1, movie 2, movie 3} as of {current date}":
 
+f = open('final_project_processed_data.txt','w') 
+f.write('Processed Data for Casablanca, Pulp Fiction, and La La Land as of 4/20/2017:\n\n\n')
+	
 ### Next, there should be a heading called "Twitter users' popularity" followed by the corresponding data from user_popularity: 
 
-### Next, there should be a heading called "Movie feedback" followed by the corresponding data from movies_imdb_sorted and movies_favorites_sorted: 
-
-### Finally, there should be a heading called "High-rated movies" followed by the corresponding data from best_movies: 
-
-
+f.write("Twitter Users' Popularity:\n\n")
+for t in user_popularity:
+	f.write("Username: {}\nFollowers: {}\nTweet Favorites: {}\nTweet Retweets: {}\n\n".format(t.screen_name, t.num_followers, t.num_favs, t.num_retweets))
 
 
+### Next, there should be a heading called "Movie feedback" followed by the corresponding data from movies_imdb_sorted and movies_retweets_sorted: 
+
+f.write("Movie Feedback:\n\n")
+
+f.write("Movies sorted by IMDB rating:\n\n")
+for m in movies_imdb_sorted:
+	f.write("{}, {}\n\n".format(m, movie_feedback[m][0]))
+
+f.write("Movies sorted by average number of retweets:\n\n")
+for m in movies_retweets_sorted:
+	f.write("{}, {}\n\n".format(m, movie_feedback[m][1]))
+
+
+### Finally, there should be a heading called "Movies with IMDB ratings higher than 7" followed by the corresponding data from best_movies: 
+
+f.write("Movies with IMDB ratings higher than 7:\n\n")
+
+for m in best_movies:
+	f.write("{}\n".format(m))
+
+
+
+f.close() 
 
 ############# TEST CASES ################	
 print("\n\n*** OUTPUT OF TESTS BELOW THIS LINE ***\n\n")
